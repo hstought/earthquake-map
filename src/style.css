@@ -1,96 +1,163 @@
+@import "tailwindcss";
+
+/* Leaflet required styles */
+@import 'leaflet/dist/leaflet.css';
+
+/* Custom styles */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color: #ffffff;
+  background-color: #0a0a0a;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
+* {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #3178c6aa);
+#map {
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
-.card {
-  padding: 2em;
+/* Glassmorphism panel */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.read-the-docs {
-  color: #888;
+/* Custom select styling */
+.custom-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
+/* Dropdown option styling */
+.custom-select option {
   background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  color: #ffffff;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: none;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+.custom-select option:hover,
+.custom-select option:focus,
+.custom-select option:checked {
+  background-color: #2a2a2a;
+  color: #f97316;
+}
+
+/* Earthquake marker transitions - only transition opacity/filter, not position */
+.leaflet-interactive {
+  transition: opacity 0.2s ease-out, filter 0.2s ease-out, fill-opacity 0.2s ease-out;
+}
+
+.leaflet-interactive:hover {
+  filter: brightness(1.3);
+}
+
+/* Smooth map zoom animation */
+.leaflet-zoom-anim .leaflet-zoom-animated {
+  transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
+
+/* Prevent marker jumping during zoom */
+.leaflet-marker-pane,
+.leaflet-overlay-pane {
+  will-change: transform;
+}
+
+/* Custom popup styling */
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 15, 15, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.leaflet-popup-content {
+  color: #ffffff;
+  margin: 12px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.leaflet-popup-tip {
+  background: rgba(15, 15, 15, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaflet-popup-close-button {
+  color: #888 !important;
+  font-size: 20px !important;
+  padding: 8px !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #fff !important;
+}
+
+/* Refresh indicator pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
   }
-  a:hover {
-    color: #747bff;
+  50% {
+    opacity: 0.5;
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Hide Leaflet attribution on small screens */
+@media (max-width: 640px) {
+  .leaflet-control-attribution {
+    display: none;
+  }
+  
+  .glass-panel {
+    margin: 8px !important;
+    padding: 12px !important;
   }
 }
