@@ -153,64 +153,10 @@ export function formatDepth(depth: number): string {
 }
 
 /**
- * Generate popup content for an earthquake
+ * Get depth description
  */
-export function generatePopupContent(feature: EarthquakeFeature): string {
-  const { properties, geometry } = feature;
-  const [lng, lat, depth] = geometry.coordinates;
-  const mag = properties.mag !== null ? properties.mag.toFixed(1) : 'N/A';
-  const magColor = getMagnitudeColor(properties.mag);
-  
-  return `
-    <div class="earthquake-popup">
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-        <div style="
-          width: 36px; 
-          height: 36px; 
-          border-radius: 50%; 
-          background: ${magColor}; 
-          display: flex; 
-          align-items: center; 
-          justify-content: center;
-          font-weight: 700;
-          font-size: 14px;
-          color: white;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        ">${mag}</div>
-        <div>
-          <div style="font-weight: 600; font-size: 14px; color: white;">${properties.place || 'Unknown location'}</div>
-          <div style="font-size: 12px; color: #9ca3af;">${formatTime(properties.time)}</div>
-        </div>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
-        <div>
-          <span style="color: #6b7280;">Depth:</span>
-          <span style="color: #d1d5db; margin-left: 4px;">${formatDepth(depth)}</span>
-        </div>
-        <div>
-          <span style="color: #6b7280;">Coords:</span>
-          <span style="color: #d1d5db; margin-left: 4px;">${lat.toFixed(2)}°, ${lng.toFixed(2)}°</span>
-        </div>
-      </div>
-      ${properties.tsunami === 1 ? `
-        <div style="margin-top: 8px; padding: 6px 10px; background: rgba(239, 68, 68, 0.2); border-radius: 6px; font-size: 12px; color: #fca5a5;">
-          ⚠️ Tsunami warning issued
-        </div>
-      ` : ''}
-      <a href="${properties.url}" target="_blank" rel="noopener noreferrer" style="
-        display: block;
-        margin-top: 10px;
-        padding: 8px 12px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-        text-align: center;
-        font-size: 12px;
-        color: #f97316;
-        text-decoration: none;
-        transition: background 0.2s;
-      " onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
-        View on USGS →
-      </a>
-    </div>
-  `;
+export function getDepthDescription(depth: number): string {
+  if (depth < 70) return 'Shallow';
+  if (depth < 300) return 'Intermediate';
+  return 'Deep';
 }
