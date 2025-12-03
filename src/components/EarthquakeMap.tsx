@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { toast } from 'sonner';
-import L from 'leaflet';
 
 import {
   fetchEarthquakes,
@@ -20,19 +19,6 @@ import StatsBar from './StatsBar';
 import MagnitudeLegend from './MagnitudeLegend';
 import LoadingOverlay from './LoadingOverlay';
 import EarthquakePopup from './EarthquakePopup';
-
-// Fix Leaflet default icon paths for bundlers
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-// @ts-expect-error - Leaflet typing issue
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x.src ?? markerIcon2x,
-  iconUrl: markerIcon.src ?? markerIcon,
-  shadowUrl: markerShadow.src ?? markerShadow,
-});
 
 // Constants
 const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
@@ -105,16 +91,10 @@ export default function EarthquakeMap() {
   const [lastUpdated, setLastUpdated] = useState('--');
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [mapReady, setMapReady] = useState(false);
   
   // Track previous earthquake IDs to detect new ones
   const previousIdsRef = useRef<Set<string>>(new Set());
   const [newEarthquakeIds, setNewEarthquakeIds] = useState<Set<string>>(new Set());
-
-  // Ensure map only mounts once (fixes React Strict Mode double-mount issue)
-  useEffect(() => {
-    setMapReady(true);
-  }, []);
 
   const loadEarthquakes = useCallback(async () => {
     setIsLoading(true);
@@ -170,35 +150,33 @@ export default function EarthquakeMap() {
 
   return (
     <div className="w-full h-dvh relative">
-      {/* Map - only render after component is mounted to avoid Strict Mode double-init */}
-      {mapReady && (
-        <MapContainer
-          center={[20, 0]}
-          zoom={2}
-          minZoom={2}
-          maxZoom={18}
-          worldCopyJump={true}
-          zoomControl={true}
-          className="w-full h-full z-0"
-        >
-          <MapConfig />
-          <TileLayer
-            attribution={CARTO_ATTRIBUTION}
-            url={CARTO_DARK_TILES}
-            subdomains="abcd"
-            maxZoom={19}
+      {/* Map */}
+      <MapContainer
+        center={[20, 0]}
+        zoom={2}
+        minZoom={2}
+        maxZoom={18}
+        worldCopyJump={true}
+        zoomControl={true}
+        className="w-full h-full absolute inset-0 z-0"
+      >
+        <MapConfig />
+        <TileLayer
+          attribution={CARTO_ATTRIBUTION}
+          url={CARTO_DARK_TILES}
+          subdomains="abcd"
+          maxZoom={19}
+        />
+        
+        {/* Earthquake markers */}
+        {earthquakes.map((feature) => (
+          <EarthquakeMarker
+            key={feature.id}
+            feature={feature}
+            isNew={newEarthquakeIds.has(feature.id)}
           />
-          
-          {/* Earthquake markers */}
-          {earthquakes.map((feature) => (
-            <EarthquakeMarker
-              key={feature.id}
-              feature={feature}
-              isNew={newEarthquakeIds.has(feature.id)}
-            />
-          ))}
-        </MapContainer>
-      )}
+        ))}
+      </MapContainer>
 
       {/* Filter Panel */}
       <FilterPanel
