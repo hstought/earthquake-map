@@ -105,10 +105,16 @@ export default function EarthquakeMap() {
   const [lastUpdated, setLastUpdated] = useState('--');
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [mapReady, setMapReady] = useState(false);
   
   // Track previous earthquake IDs to detect new ones
   const previousIdsRef = useRef<Set<string>>(new Set());
   const [newEarthquakeIds, setNewEarthquakeIds] = useState<Set<string>>(new Set());
+
+  // Ensure map only mounts once (fixes React Strict Mode double-mount issue)
+  useEffect(() => {
+    setMapReady(true);
+  }, []);
 
   const loadEarthquakes = useCallback(async () => {
     setIsLoading(true);
@@ -164,33 +170,35 @@ export default function EarthquakeMap() {
 
   return (
     <div className="w-full h-dvh relative">
-      {/* Map */}
-      <MapContainer
-        center={[20, 0]}
-        zoom={2}
-        minZoom={2}
-        maxZoom={18}
-        worldCopyJump={true}
-        zoomControl={true}
-        className="w-full h-full z-0"
-      >
-        <MapConfig />
-        <TileLayer
-          attribution={CARTO_ATTRIBUTION}
-          url={CARTO_DARK_TILES}
-          subdomains="abcd"
-          maxZoom={19}
-        />
-        
-        {/* Earthquake markers */}
-        {earthquakes.map((feature) => (
-          <EarthquakeMarker
-            key={feature.id}
-            feature={feature}
-            isNew={newEarthquakeIds.has(feature.id)}
+      {/* Map - only render after component is mounted to avoid Strict Mode double-init */}
+      {mapReady && (
+        <MapContainer
+          center={[20, 0]}
+          zoom={2}
+          minZoom={2}
+          maxZoom={18}
+          worldCopyJump={true}
+          zoomControl={true}
+          className="w-full h-full z-0"
+        >
+          <MapConfig />
+          <TileLayer
+            attribution={CARTO_ATTRIBUTION}
+            url={CARTO_DARK_TILES}
+            subdomains="abcd"
+            maxZoom={19}
           />
-        ))}
-      </MapContainer>
+          
+          {/* Earthquake markers */}
+          {earthquakes.map((feature) => (
+            <EarthquakeMarker
+              key={feature.id}
+              feature={feature}
+              isNew={newEarthquakeIds.has(feature.id)}
+            />
+          ))}
+        </MapContainer>
+      )}
 
       {/* Filter Panel */}
       <FilterPanel

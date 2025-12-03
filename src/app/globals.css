@@ -1,9 +1,9 @@
+/* Leaflet required styles - must be first */
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Leaflet required styles */
-@import 'leaflet/dist/leaflet.css';
 
 /* Custom styles */
 :root {
