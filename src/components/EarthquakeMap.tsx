@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { toast } from 'sonner';
 
 import {
@@ -19,11 +23,18 @@ import StatsBar from './StatsBar';
 import MagnitudeLegend from './MagnitudeLegend';
 import LoadingOverlay from './LoadingOverlay';
 import EarthquakePopup from './EarthquakePopup';
+import { renderToString } from 'react-dom/server';
 
 // Constants
 const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 const CARTO_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 const CARTO_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+// Map bounds to prevent scrolling beyond the world
+const WORLD_BOUNDS = L.latLngBounds(
+  L.latLng(-85, -180), // Southwest corner
+  L.latLng(85, 180)    // Northeast corner
+);
 
 // Map configuration component for setting zoom control position
 function MapConfig() {
@@ -36,7 +47,7 @@ function MapConfig() {
   return null;
 }
 
-// Individual earthquake marker component with hover effects
+// Individual earthquake marker component with hover effects (non-clustered version)
 interface EarthquakeMarkerProps {
   feature: EarthquakeFeature;
   isNew: boolean;
@@ -76,11 +87,137 @@ function EarthquakeMarker({ feature, isNew }: EarthquakeMarkerProps) {
         mouseout: () => setIsHovered(false),
       }}
     >
+      <Tooltip direction="top" offset={[0, -5]} opacity={0.9}>
+        <span className="font-semibold">M {(magnitude ?? 0).toFixed(1)}</span>
+      </Tooltip>
       <Popup maxWidth={300} className="earthquake-popup-container">
         <EarthquakePopup feature={feature} />
       </Popup>
     </CircleMarker>
   );
+}
+
+// Component that manages clustered markers using native Leaflet markercluster
+interface ClusteredMarkersProps {
+  earthquakes: EarthquakeFeature[];
+}
+
+function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
+  const map = useMap();
+  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
+
+  useEffect(() => {
+    // Create cluster group if it doesn't exist
+    if (!clusterGroupRef.current) {
+      clusterGroupRef.current = L.markerClusterGroup({
+        chunkedLoading: true,
+        maxClusterRadius: 60,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        disableClusteringAtZoom: 10,
+        iconCreateFunction: (cluster) => {
+          const count = cluster.getChildCount();
+          let size = 40;
+          let className = 'cluster-small';
+          if (count >= 100) {
+            size = 60;
+            className = 'cluster-large';
+          } else if (count >= 10) {
+            size = 50;
+            className = 'cluster-medium';
+          }
+          return L.divIcon({
+            html: `<div class="cluster-marker ${className}"><span>${count}</span></div>`,
+            className: 'custom-cluster-icon',
+            iconSize: L.point(size, size),
+          });
+        },
+      });
+      map.addLayer(clusterGroupRef.current);
+    }
+
+    // Clear existing markers
+    clusterGroupRef.current.clearLayers();
+
+    // Add new markers
+    earthquakes.forEach((feature) => {
+      const [lng, lat] = feature.geometry.coordinates;
+      const magnitude = feature.properties.mag ?? 0;
+      const size = getMagnitudeRadius(magnitude) * 2;
+      const color = getMagnitudeColor(magnitude);
+
+      const icon = L.divIcon({
+        className: 'earthquake-marker-icon',
+        html: `<div class="earthquake-dot" style="
+          width: ${size}px;
+          height: ${size}px;
+          background-color: ${color};
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          opacity: 0.8;
+          transition: all 0.2s ease;
+        "></div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+      });
+
+      const marker = L.marker([lat, lng], { icon });
+      
+      // Add tooltip
+      marker.bindTooltip(`<span class="font-semibold">M ${magnitude.toFixed(1)}</span>`, {
+        direction: 'top',
+        offset: [0, -5],
+        opacity: 0.9,
+        className: 'earthquake-tooltip',
+      });
+
+      // Add popup with earthquake details
+      const popupContent = renderToString(<EarthquakePopup feature={feature} />);
+      marker.bindPopup(popupContent, {
+        maxWidth: 300,
+        className: 'earthquake-popup-container',
+      });
+
+      // Add hover effects
+      marker.on('mouseover', function(this: L.Marker) {
+        const el = this.getElement();
+        if (el) {
+          const dot = el.querySelector('.earthquake-dot') as HTMLElement;
+          if (dot) {
+            dot.style.transform = 'scale(1.3)';
+            dot.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+            dot.style.borderWidth = '2px';
+            dot.style.opacity = '1';
+          }
+        }
+      });
+
+      marker.on('mouseout', function(this: L.Marker) {
+        const el = this.getElement();
+        if (el) {
+          const dot = el.querySelector('.earthquake-dot') as HTMLElement;
+          if (dot) {
+            dot.style.transform = 'scale(1)';
+            dot.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            dot.style.borderWidth = '1px';
+            dot.style.opacity = '0.8';
+          }
+        }
+      });
+
+      clusterGroupRef.current!.addLayer(marker);
+    });
+
+    return () => {
+      // Cleanup on unmount
+      if (clusterGroupRef.current) {
+        map.removeLayer(clusterGroupRef.current);
+        clusterGroupRef.current = null;
+      }
+    };
+  }, [earthquakes, map]);
+
+  return null;
 }
 
 export default function EarthquakeMap() {
@@ -94,7 +231,6 @@ export default function EarthquakeMap() {
   
   // Track previous earthquake IDs to detect new ones
   const previousIdsRef = useRef<Set<string>>(new Set());
-  const [newEarthquakeIds, setNewEarthquakeIds] = useState<Set<string>>(new Set());
 
   const loadEarthquakes = useCallback(async () => {
     setIsLoading(true);
@@ -121,7 +257,6 @@ export default function EarthquakeMap() {
       }
       
       previousIdsRef.current = currentIds;
-      setNewEarthquakeIds(newIds);
       setEarthquakes(data.features);
       setCount(data.features.length);
       setLastUpdated(formatRelativeTime(data.metadata.generated));
@@ -156,6 +291,8 @@ export default function EarthquakeMap() {
         zoom={2}
         minZoom={2}
         maxZoom={18}
+        maxBounds={WORLD_BOUNDS}
+        maxBoundsViscosity={1.0}
         worldCopyJump={true}
         zoomControl={true}
         className="w-full h-full absolute inset-0 z-0"
@@ -168,14 +305,8 @@ export default function EarthquakeMap() {
           maxZoom={19}
         />
         
-        {/* Earthquake markers */}
-        {earthquakes.map((feature) => (
-          <EarthquakeMarker
-            key={feature.id}
-            feature={feature}
-            isNew={newEarthquakeIds.has(feature.id)}
-          />
-        ))}
+        {/* Clustered earthquake markers using native Leaflet */}
+        <ClusteredMarkers earthquakes={earthquakes} />
       </MapContainer>
 
       {/* Filter Panel */}
