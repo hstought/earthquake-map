@@ -213,41 +213,12 @@ html, body {
 }
 
 .cluster-marker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-weight: 600;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.2);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cluster-marker:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.3);
-}
-
-.cluster-small {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  width: 40px;
-  height: 40px;
-  font-size: 12px;
-}
-
-.cluster-medium {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  width: 50px;
-  height: 50px;
-  font-size: 14px;
-}
-
-.cluster-large {
-  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
-  width: 60px;
-  height: 60px;
-  font-size: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
 }
 
 /* Tooltip styling */

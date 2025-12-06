@@ -97,6 +97,11 @@ function EarthquakeMarker({ feature, isNew }: EarthquakeMarkerProps) {
   );
 }
 
+// Extended marker type with magnitude data
+interface EarthquakeMarkerData {
+  magnitude: number;
+}
+
 // Component that manages clustered markers using native Leaflet markercluster
 interface ClusteredMarkersProps {
   earthquakes: EarthquakeFeature[];
@@ -117,17 +122,45 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
         disableClusteringAtZoom: 10,
         iconCreateFunction: (cluster) => {
           const count = cluster.getChildCount();
+          const childMarkers = cluster.getAllChildMarkers();
+          
+          // Calculate average magnitude from all child markers
+          let totalMagnitude = 0;
+          let validCount = 0;
+          childMarkers.forEach((marker) => {
+            const data = (marker as L.Marker & { earthquakeData?: EarthquakeMarkerData }).earthquakeData;
+            if (data && typeof data.magnitude === 'number') {
+              totalMagnitude += data.magnitude;
+              validCount++;
+            }
+          });
+          
+          const avgMagnitude = validCount > 0 ? totalMagnitude / validCount : 0;
+          const clusterColor = getMagnitudeColor(avgMagnitude);
+          
+          // Determine size based on count
           let size = 40;
-          let className = 'cluster-small';
           if (count >= 100) {
             size = 60;
-            className = 'cluster-large';
           } else if (count >= 10) {
             size = 50;
-            className = 'cluster-medium';
           }
+          
           return L.divIcon({
-            html: `<div class="cluster-marker ${className}"><span>${count}</span></div>`,
+            html: `<div class="cluster-marker" style="
+              width: ${size}px;
+              height: ${size}px;
+              background: ${clusterColor};
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 50%;
+              font-weight: 600;
+              color: white;
+              text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.2);
+              font-size: ${count >= 100 ? '14px' : count >= 10 ? '13px' : '12px'};
+            "><span>${count}</span></div>`,
             className: 'custom-cluster-icon',
             iconSize: L.point(size, size),
           });
@@ -161,7 +194,10 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
         iconAnchor: [size / 2, size / 2],
       });
 
-      const marker = L.marker([lat, lng], { icon });
+      const marker = L.marker([lat, lng], { icon }) as L.Marker & { earthquakeData?: EarthquakeMarkerData };
+      
+      // Store magnitude data on marker for cluster icon calculation
+      marker.earthquakeData = { magnitude };
       
       // Add tooltip
       marker.bindTooltip(`<span class="font-semibold">M ${magnitude.toFixed(1)}</span>`, {
@@ -315,14 +351,21 @@ export default function EarthquakeMap() {
         period={period}
         onMagnitudeChange={setMagnitude}
         onPeriodChange={setPeriod}
-      >
+      />
+
+      {/* Stats Bar - next to hamburger menu */}
+      <div className="glass-panel absolute top-4 left-[72px] z-[1000] rounded-xl px-4 py-3">
         <StatsBar
           count={count}
           lastUpdated={lastUpdated}
           isLoading={isLoading && !isInitialLoad}
         />
+      </div>
+
+      {/* Magnitude Legend - bottom left */}
+      <div className="glass-panel absolute bottom-4 left-4 z-[1000] rounded-xl px-4 py-3 min-w-[200px]">
         <MagnitudeLegend />
-      </FilterPanel>
+      </div>
 
       {/* Loading Overlay (initial load only) */}
       <LoadingOverlay isVisible={isInitialLoad && isLoading} />
