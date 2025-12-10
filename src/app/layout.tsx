@@ -14,18 +14,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body suppressHydrationWarning>
         {children}
         <Toaster 
           richColors 
           position="bottom-right"
           toastOptions={{
-            style: {
-              background: 'rgba(15, 15, 15, 0.95)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            },
+            className: 'toast-theme',
           }}
         />
       </body>

@@ -24,10 +24,10 @@ export default function EarthquakePopup({ feature }: EarthquakePopupProps) {
           {mag}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm text-white truncate">
+          <div className="font-semibold text-sm popup-title truncate">
             {properties.place || 'Unknown location'}
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs popup-subtitle">
             {formatTime(properties.time)}
           </div>
         </div>
@@ -36,12 +36,12 @@ export default function EarthquakePopup({ feature }: EarthquakePopupProps) {
       {/* Details grid */}
       <div className="grid grid-cols-2 gap-2 text-xs mb-3">
         <div>
-          <span className="text-gray-500">Depth:</span>
-          <span className="text-gray-300 ml-1">{formatDepth(depth)}</span>
+          <span className="popup-label">Depth:</span>
+          <span className="popup-value ml-1">{formatDepth(depth)}</span>
         </div>
         <div>
-          <span className="text-gray-500">Coords:</span>
-          <span className="text-gray-300 ml-1">
+          <span className="popup-label">Coords:</span>
+          <span className="popup-value ml-1">
             {lat.toFixed(2)}°, {lng.toFixed(2)}°
           </span>
         </div>
@@ -49,7 +49,7 @@ export default function EarthquakePopup({ feature }: EarthquakePopupProps) {
 
       {/* Tsunami warning */}
       {properties.tsunami === 1 && (
-        <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-red-500/20 rounded-lg text-xs text-red-300">
+        <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-red-500/20 rounded-lg text-xs text-red-400">
           <AlertTriangle className="w-4 h-4 flex-shrink-0" />
           <span>Tsunami warning issued</span>
         </div>
@@ -60,7 +60,7 @@ export default function EarthquakePopup({ feature }: EarthquakePopupProps) {
         href={properties.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs text-orange-400 hover:text-orange-300 transition-all duration-200 group"
+        className="popup-link flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg text-xs transition-all duration-200 group"
       >
         <span>View on USGS</span>
         <ExternalLink className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />

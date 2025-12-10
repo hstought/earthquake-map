@@ -23,11 +23,13 @@ import StatsBar from './StatsBar';
 import MagnitudeLegend from './MagnitudeLegend';
 import LoadingOverlay from './LoadingOverlay';
 import EarthquakePopup from './EarthquakePopup';
+import ThemeToggle from './ThemeToggle';
 import { renderToString } from 'react-dom/server';
 
 // Constants
 const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 const CARTO_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const CARTO_LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 const CARTO_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 // Map bounds to prevent scrolling beyond the world
@@ -264,9 +266,26 @@ export default function EarthquakeMap() {
   const [lastUpdated, setLastUpdated] = useState('--');
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   
   // Track previous earthquake IDs to detect new ones
   const previousIdsRef = useRef<Set<string>>(new Set());
+
+  // Update document class when theme changes
+  useEffect(() => {
+    const html = document.documentElement;
+    if (isDarkMode) {
+      html.classList.remove('light');
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+      html.classList.add('light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, []);
 
   const loadEarthquakes = useCallback(async () => {
     setIsLoading(true);
@@ -320,7 +339,7 @@ export default function EarthquakeMap() {
   }, [loadEarthquakes]);
 
   return (
-    <div className="w-full h-dvh relative">
+    <div className={`w-full h-dvh relative ${isDarkMode ? 'bg-[#0a0a0a]' : 'bg-[#f5f5f5]'}`}>
       {/* Map */}
       <MapContainer
         center={[20, 0]}
@@ -335,8 +354,9 @@ export default function EarthquakeMap() {
       >
         <MapConfig />
         <TileLayer
+          key={isDarkMode ? 'dark' : 'light'}
           attribution={CARTO_ATTRIBUTION}
-          url={CARTO_DARK_TILES}
+          url={isDarkMode ? CARTO_DARK_TILES : CARTO_LIGHT_TILES}
           subdomains="abcd"
           maxZoom={19}
         />
@@ -351,6 +371,7 @@ export default function EarthquakeMap() {
         period={period}
         onMagnitudeChange={setMagnitude}
         onPeriodChange={setPeriod}
+        isDarkMode={isDarkMode}
       />
 
       {/* Stats Bar - next to hamburger menu */}
@@ -359,12 +380,18 @@ export default function EarthquakeMap() {
           count={count}
           lastUpdated={lastUpdated}
           isLoading={isLoading && !isInitialLoad}
+          isDarkMode={isDarkMode}
         />
       </div>
 
       {/* Magnitude Legend - bottom left */}
       <div className="glass-panel absolute bottom-4 left-4 z-[1000] rounded-xl px-4 py-3 min-w-[200px]">
-        <MagnitudeLegend />
+        <MagnitudeLegend isDarkMode={isDarkMode} />
+      </div>
+
+      {/* Theme Toggle - top right */}
+      <div className="absolute top-4 right-4 z-[1000]">
+        <ThemeToggle isDarkMode={isDarkMode} onToggle={toggleTheme} />
       </div>
 
       {/* Loading Overlay (initial load only) */}
