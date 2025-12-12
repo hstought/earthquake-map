@@ -57,6 +57,13 @@ export interface EarthquakeResponse {
   bbox?: [number, number, number, number, number, number]; // Bounding box
 }
 
+// Extended response from our cached API
+export interface CachedEarthquakeResponse extends EarthquakeResponse {
+  cachedAt: number;       // When we last fetched from USGS
+  cacheExpiresAt: number; // When the cache will expire
+  stale?: boolean;        // Whether this is stale cached data
+}
+
 // Filter types
 export type MagnitudeFilter = 'all' | '1.0' | '2.5' | '4.5' | 'significant';
 export type TimePeriodFilter = 'hour' | 'day' | 'week' | 'month';
@@ -73,13 +80,14 @@ export function buildFeedUrl(magnitude: MagnitudeFilter, period: TimePeriodFilte
 }
 
 /**
- * Fetch earthquake data from USGS
+ * Fetch earthquake data from our cached API endpoint
+ * This limits USGS API calls to once every 6 hours
  */
 export async function fetchEarthquakes(
   magnitude: MagnitudeFilter = '2.5',
   period: TimePeriodFilter = 'day'
-): Promise<EarthquakeResponse> {
-  const url = buildFeedUrl(magnitude, period);
+): Promise<CachedEarthquakeResponse> {
+  const url = `/api/earthquakes?magnitude=${magnitude}&period=${period}`;
   
   const response = await fetch(url);
   
@@ -87,7 +95,7 @@ export async function fetchEarthquakes(
     throw new Error(`Failed to fetch earthquake data: ${response.status} ${response.statusText}`);
   }
   
-  const data: EarthquakeResponse = await response.json();
+  const data: CachedEarthquakeResponse = await response.json();
   return data;
 }
 
@@ -143,6 +151,20 @@ export function formatRelativeTime(timestamp: number): string {
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   return `${days}d ago`;
+}
+
+/**
+ * Format absolute date/time for cache display (e.g., "Dec 11, 3:45 PM")
+ */
+export function formatCacheTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 }
 
 /**

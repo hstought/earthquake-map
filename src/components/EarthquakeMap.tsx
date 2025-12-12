@@ -12,7 +12,7 @@ import {
   fetchEarthquakes,
   getMagnitudeColor,
   getMagnitudeRadius,
-  formatRelativeTime,
+  formatCacheTime,
   type MagnitudeFilter,
   type TimePeriodFilter,
   type EarthquakeFeature,
@@ -27,7 +27,6 @@ import ThemeToggle from './ThemeToggle';
 import { renderToString } from 'react-dom/server';
 
 // Constants
-const AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
 const CARTO_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 const CARTO_LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 const CARTO_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
@@ -314,7 +313,8 @@ export default function EarthquakeMap() {
       previousIdsRef.current = currentIds;
       setEarthquakes(data.features);
       setCount(data.features.length);
-      setLastUpdated(formatRelativeTime(data.metadata.generated));
+      // Use cachedAt to show when data was actually fetched from USGS
+      setLastUpdated(formatCacheTime(data.cachedAt));
       
       if (isInitialLoad) {
         setIsInitialLoad(false);
@@ -329,13 +329,9 @@ export default function EarthquakeMap() {
     }
   }, [magnitude, period, isInitialLoad]);
 
-  // Initial load and auto-refresh
+  // Initial load - data is cached server-side for 6 hours
   useEffect(() => {
     loadEarthquakes();
-    
-    const intervalId = setInterval(loadEarthquakes, AUTO_REFRESH_INTERVAL);
-    
-    return () => clearInterval(intervalId);
   }, [loadEarthquakes]);
 
   return (
