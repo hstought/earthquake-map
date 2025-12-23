@@ -2,6 +2,9 @@
 
 A real-time earthquake visualization app built with Next.js and React. Track seismic activity worldwide using USGS data with an interactive map, intelligent clustering, dark/light themes, and advanced filtering.
 
+## Demo
+https://earthquake-map-alpha.vercel.app/
+
 ## Features
 
 - **Interactive Map** - Smart marker clustering with magnitude-based coloring
