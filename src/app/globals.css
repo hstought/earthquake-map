@@ -201,14 +201,29 @@ html, body {
 }
 
 .leaflet-popup-close-button {
-  color: #888 !important;
+  color: #999 !important;
   font-size: 20px !important;
-  padding: 8px !important;
-  transition: color 0.2s ease;
+  font-weight: 300 !important;
+  font-family: Arial, sans-serif !important;
+  padding: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  transition: all 0.2s ease !important;
+  top: 6px !important;
+  right: 6px !important;
+  background-color: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  padding-bottom: 2px !important;
 }
 
 .leaflet-popup-close-button:hover {
-  color: #fff !important;
+  color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  transform: scale(1.1) !important;
 }
 
 /* Popup content theme styles */
@@ -265,7 +280,8 @@ html, body {
 }
 
 .light .leaflet-popup-close-button:hover {
-  color: #1a1a1a !important;
+  color: #dc2626 !important;
+  background-color: rgba(220, 38, 38, 0.15) !important;
 }
 
 /* Refresh indicator pulse animation */

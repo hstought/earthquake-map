@@ -14,9 +14,9 @@ export default function EarthquakePopup({ feature }: EarthquakePopupProps) {
   const magColor = getMagnitudeColor(properties.mag);
 
   return (
-    <div className="earthquake-popup min-w-[220px]">
+    <div className="earthquake-popup min-w-[220px] pr-3">
       {/* Header with magnitude badge */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3 mb-3 pr-1">
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white shadow-lg transition-transform hover:scale-110"
           style={{ backgroundColor: magColor }}
