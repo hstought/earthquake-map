@@ -30,4 +30,4 @@ next-env.d.ts
 *.sw?
 
 # Specific files
-project-notes.md
+TODO.md
