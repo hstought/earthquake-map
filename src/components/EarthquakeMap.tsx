@@ -31,11 +31,18 @@ const CARTO_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}
 const CARTO_LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 const CARTO_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-// Map bounds to prevent scrolling beyond the world
-const WORLD_BOUNDS = L.latLngBounds(
-  L.latLng(-85, -180), // Southwest corner
-  L.latLng(85, 180)    // Northeast corner
+// Map bounds - infinite horizontal (use very large values), limited vertical (poles)
+// This allows infinite left/right panning while preventing scrolling past the poles
+const INFINITE_HORIZONTAL_BOUNDS = L.latLngBounds(
+  L.latLng(-85, -Infinity), // Southwest corner - infinite west
+  L.latLng(85, Infinity)    // Northeast corner - infinite east
 );
+
+// Helper function to get wrapped longitudes for infinite horizontal scrolling
+// This returns the original longitude plus offsets for adjacent world copies
+function getWrappedLongitudes(lng: number): number[] {
+  return [lng - 360, lng, lng + 360];
+}
 
 // Map configuration component for setting zoom control position
 function MapConfig() {
@@ -173,76 +180,81 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
     // Clear existing markers
     clusterGroupRef.current.clearLayers();
 
-    // Add new markers
+    // Add new markers (including wrapped copies for infinite scroll)
     earthquakes.forEach((feature) => {
       const [lng, lat] = feature.geometry.coordinates;
       const magnitude = feature.properties.mag ?? 0;
       const size = getMagnitudeRadius(magnitude) * 2;
       const color = getMagnitudeColor(magnitude);
 
-      const icon = L.divIcon({
-        className: 'earthquake-marker-icon',
-        html: `<div class="earthquake-dot" style="
-          width: ${size}px;
-          height: ${size}px;
-          background-color: ${color};
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          border-radius: 50%;
-          opacity: 0.8;
-          transition: all 0.2s ease;
-        "></div>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2],
-      });
-
-      const marker = L.marker([lat, lng], { icon }) as L.Marker & { earthquakeData?: EarthquakeMarkerData };
+      // Create markers at wrapped longitudes for seamless infinite scrolling
+      const wrappedLongitudes = getWrappedLongitudes(lng);
       
-      // Store magnitude data on marker for cluster icon calculation
-      marker.earthquakeData = { magnitude };
-      
-      // Add tooltip
-      marker.bindTooltip(`<span class="font-semibold">M ${magnitude.toFixed(1)}</span>`, {
-        direction: 'top',
-        offset: [0, -5],
-        opacity: 0.9,
-        className: 'earthquake-tooltip',
-      });
+      wrappedLongitudes.forEach((wrappedLng) => {
+        const icon = L.divIcon({
+          className: 'earthquake-marker-icon',
+          html: `<div class="earthquake-dot" style="
+            width: ${size}px;
+            height: ${size}px;
+            background-color: ${color};
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            opacity: 0.8;
+            transition: all 0.2s ease;
+          "></div>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
 
-      // Add popup with earthquake details
-      const popupContent = renderToString(<EarthquakePopup feature={feature} />);
-      marker.bindPopup(popupContent, {
-        maxWidth: 300,
-        className: 'earthquake-popup-container',
-      });
+        const marker = L.marker([lat, wrappedLng], { icon }) as L.Marker & { earthquakeData?: EarthquakeMarkerData };
+        
+        // Store magnitude data on marker for cluster icon calculation
+        marker.earthquakeData = { magnitude };
+        
+        // Add tooltip
+        marker.bindTooltip(`<span class="font-semibold">M ${magnitude.toFixed(1)}</span>`, {
+          direction: 'top',
+          offset: [0, -5],
+          opacity: 0.9,
+          className: 'earthquake-tooltip',
+        });
 
-      // Add hover effects
-      marker.on('mouseover', function(this: L.Marker) {
-        const el = this.getElement();
-        if (el) {
-          const dot = el.querySelector('.earthquake-dot') as HTMLElement;
-          if (dot) {
-            dot.style.transform = 'scale(1.3)';
-            dot.style.borderColor = 'rgba(255, 255, 255, 0.6)';
-            dot.style.borderWidth = '2px';
-            dot.style.opacity = '1';
+        // Add popup with earthquake details
+        const popupContent = renderToString(<EarthquakePopup feature={feature} />);
+        marker.bindPopup(popupContent, {
+          maxWidth: 300,
+          className: 'earthquake-popup-container',
+        });
+
+        // Add hover effects
+        marker.on('mouseover', function(this: L.Marker) {
+          const el = this.getElement();
+          if (el) {
+            const dot = el.querySelector('.earthquake-dot') as HTMLElement;
+            if (dot) {
+              dot.style.transform = 'scale(1.3)';
+              dot.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+              dot.style.borderWidth = '2px';
+              dot.style.opacity = '1';
+            }
           }
-        }
-      });
+        });
 
-      marker.on('mouseout', function(this: L.Marker) {
-        const el = this.getElement();
-        if (el) {
-          const dot = el.querySelector('.earthquake-dot') as HTMLElement;
-          if (dot) {
-            dot.style.transform = 'scale(1)';
-            dot.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-            dot.style.borderWidth = '1px';
-            dot.style.opacity = '0.8';
+        marker.on('mouseout', function(this: L.Marker) {
+          const el = this.getElement();
+          if (el) {
+            const dot = el.querySelector('.earthquake-dot') as HTMLElement;
+            if (dot) {
+              dot.style.transform = 'scale(1)';
+              dot.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+              dot.style.borderWidth = '1px';
+              dot.style.opacity = '0.8';
+            }
           }
-        }
-      });
+        });
 
-      clusterGroupRef.current!.addLayer(marker);
+        clusterGroupRef.current!.addLayer(marker);
+      });
     });
 
     return () => {
@@ -342,7 +354,7 @@ export default function EarthquakeMap() {
         zoom={2}
         minZoom={2}
         maxZoom={18}
-        maxBounds={WORLD_BOUNDS}
+        maxBounds={INFINITE_HORIZONTAL_BOUNDS}
         maxBoundsViscosity={1.0}
         worldCopyJump={true}
         zoomControl={true}
@@ -355,6 +367,7 @@ export default function EarthquakeMap() {
           url={isDarkMode ? CARTO_DARK_TILES : CARTO_LIGHT_TILES}
           subdomains="abcd"
           maxZoom={19}
+          noWrap={false}
         />
         
         {/* Clustered earthquake markers using native Leaflet */}
