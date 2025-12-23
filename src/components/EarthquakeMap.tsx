@@ -384,7 +384,7 @@ export default function EarthquakeMap() {
       />
 
       {/* Stats Bar - next to hamburger menu */}
-      <div className="glass-panel absolute top-4 left-[72px] z-[1000] rounded-xl px-4 py-3">
+      <div className="glass-panel absolute top-2 left-[52px] sm:top-4 sm:left-[72px] z-[1000] rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-2 sm:py-3">
         <StatsBar
           count={count}
           lastUpdated={lastUpdated}
@@ -394,12 +394,12 @@ export default function EarthquakeMap() {
       </div>
 
       {/* Magnitude Legend - bottom left */}
-      <div className="glass-panel absolute bottom-4 left-4 z-[1000] rounded-xl px-4 py-3 min-w-[200px]">
+      <div className="glass-panel absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-[1000] rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-2 sm:py-3 min-w-[140px] sm:min-w-[200px]">
         <MagnitudeLegend isDarkMode={isDarkMode} />
       </div>
 
       {/* Theme Toggle - top right */}
-      <div className="absolute top-4 right-4 z-[1000]">
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[1000]">
         <ThemeToggle isDarkMode={isDarkMode} onToggle={toggleTheme} />
       </div>
 

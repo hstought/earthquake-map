@@ -12,7 +12,7 @@ export default function ThemeToggle({ isDarkMode, onToggle }: ThemeToggleProps) 
     <button
       onClick={onToggle}
       className={`
-        w-10 h-10 rounded-xl flex items-center justify-center
+        w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center
         transition-all duration-300 ease-out
         hover:scale-105 active:scale-95
         ${isDarkMode 
@@ -24,9 +24,9 @@ export default function ThemeToggle({ isDarkMode, onToggle }: ThemeToggleProps) 
       title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {isDarkMode ? (
-        <Sun className="w-5 h-5" />
+        <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
       ) : (
-        <Moon className="w-5 h-5" />
+        <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
       )}
     </button>
   );
