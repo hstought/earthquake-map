@@ -20,7 +20,7 @@ A real-time earthquake visualization app built with Next.js and React. Track sei
 - **Leaflet + React Leaflet** - Interactive mapping
 - **USGS API** - Real-time earthquake data
 
-## 📦 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js v18 or higher
@@ -62,8 +62,3 @@ npm start
 3. **Filter by Time** - Select data from the past hour, day, week, or month
 4. **Cluster Markers** - Nearby earthquakes are automatically grouped for better performance
 5. **View Details** - Click on markers to see detailed earthquake information including location, depth, and magnitude
-
-## License
-
-MIT
-````
