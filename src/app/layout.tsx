@@ -4,9 +4,12 @@ import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Earthquake Map - Live Seismic Activity',
+  title: 'Earthquake Map',
   description: 'Real-time earthquake visualization powered by USGS data. Track seismic activity worldwide with an interactive map.',
   keywords: ['earthquake', 'seismic', 'map', 'USGS', 'real-time', 'visualization'],
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
