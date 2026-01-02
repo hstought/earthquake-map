@@ -1,7 +1,12 @@
 'use client';
 
-import { EarthquakeFeature, getMagnitudeColor, formatTime, formatDepth } from '@/lib/earthquakeService';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
+import {
+  type EarthquakeFeature,
+  formatDepth,
+  formatTime,
+  getMagnitudeColor,
+} from '@/lib/earthquakeService';
 
 interface EarthquakePopupProps {
   feature: EarthquakeFeature;
@@ -27,9 +32,7 @@ export default function EarthquakePopup({ feature }: EarthquakePopupProps) {
           <div className="font-semibold text-sm popup-title truncate">
             {properties.place || 'Unknown location'}
           </div>
-          <div className="text-xs popup-subtitle">
-            {formatTime(properties.time)}
-          </div>
+          <div className="text-xs popup-subtitle">{formatTime(properties.time)}</div>
         </div>
       </div>
 
