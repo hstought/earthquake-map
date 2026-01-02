@@ -1,72 +1,24 @@
-// TypeScript interfaces for USGS Earthquake GeoJSON API
+/**
+ * Earthquake utility functions
+ * 
+ * This module contains pure functions for formatting and transforming earthquake data.
+ * Data fetching has been moved to lib/data/earthquakes.ts
+ */
 
-export interface EarthquakeProperties {
-  mag: number | null;           // Magnitude
-  place: string | null;         // Location description
-  time: number;                 // Unix timestamp in milliseconds
-  updated: number;              // Last updated timestamp
-  tz: number | null;            // Timezone offset
-  url: string;                  // USGS event page URL
-  detail: string;               // GeoJSON detail URL
-  felt: number | null;          // Number of felt reports
-  cdi: number | null;           // Community decimal intensity
-  mmi: number | null;           // Modified Mercalli Intensity
-  alert: string | null;         // PAGER alert level (green, yellow, orange, red)
-  status: string;               // Review status
-  tsunami: number;              // Tsunami flag (0 or 1)
-  sig: number;                  // Significance (0-1000)
-  net: string;                  // Network source
-  code: string;                 // Event code
-  ids: string;                  // Event IDs
-  sources: string;              // Network sources
-  types: string;                // Product types
-  nst: number | null;           // Number of stations
-  dmin: number | null;          // Distance to nearest station
-  rms: number | null;           // Root mean square travel time residual
-  gap: number | null;           // Azimuthal gap
-  magType: string | null;       // Magnitude type
-  type: string;                 // Event type
-  title: string;                // Full title
-}
+// Re-export types for backward compatibility during migration
+export type {
+  EarthquakeProperties,
+  EarthquakeGeometry,
+  EarthquakeFeature,
+  EarthquakeMetadata,
+  EarthquakeResponse,
+  CachedEarthquakeResponse,
+  MagnitudeFilter,
+  TimePeriodFilter,
+} from '@/types/earthquake';
 
-export interface EarthquakeGeometry {
-  type: 'Point';
-  coordinates: [number, number, number]; // [longitude, latitude, depth in km]
-}
-
-export interface EarthquakeFeature {
-  type: 'Feature';
-  properties: EarthquakeProperties;
-  geometry: EarthquakeGeometry;
-  id: string;
-}
-
-export interface EarthquakeMetadata {
-  generated: number;            // Time response was generated
-  url: string;                  // API URL
-  title: string;                // Feed title
-  status: number;               // HTTP status code
-  api: string;                  // API version
-  count: number;                // Number of earthquakes
-}
-
-export interface EarthquakeResponse {
-  type: 'FeatureCollection';
-  metadata: EarthquakeMetadata;
-  features: EarthquakeFeature[];
-  bbox?: [number, number, number, number, number, number]; // Bounding box
-}
-
-// Extended response from our cached API
-export interface CachedEarthquakeResponse extends EarthquakeResponse {
-  cachedAt: number;       // When we last fetched from USGS
-  cacheExpiresAt: number; // When the cache will expire
-  stale?: boolean;        // Whether this is stale cached data
-}
-
-// Filter types
-export type MagnitudeFilter = 'all' | '1.0' | '2.5' | '4.5' | 'significant';
-export type TimePeriodFilter = 'hour' | 'day' | 'week' | 'month';
+// Re-export data fetching function for backward compatibility
+export { fetchEarthquakes } from '@/lib/data/earthquakes';
 
 // Base URL for USGS real-time feeds
 const USGS_FEED_BASE = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary';
@@ -74,33 +26,14 @@ const USGS_FEED_BASE = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summar
 /**
  * Build the USGS feed URL based on magnitude and time period filters
  */
-export function buildFeedUrl(magnitude: MagnitudeFilter, period: TimePeriodFilter): string {
+export function buildFeedUrl(magnitude: string, period: string): string {
   const magPart = magnitude === 'all' ? 'all' : magnitude;
   return `${USGS_FEED_BASE}/${magPart}_${period}.geojson`;
 }
 
 /**
- * Fetch earthquake data from our cached API endpoint
- * This limits USGS API calls to once every 6 hours
- */
-export async function fetchEarthquakes(
-  magnitude: MagnitudeFilter = '2.5',
-  period: TimePeriodFilter = 'day'
-): Promise<CachedEarthquakeResponse> {
-  const url = `/api/earthquakes?magnitude=${magnitude}&period=${period}`;
-  
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch earthquake data: ${response.status} ${response.statusText}`);
-  }
-  
-  const data: CachedEarthquakeResponse = await response.json();
-  return data;
-}
-
-/**
  * Get color for earthquake marker based on magnitude
+ * Uses a gradient from green (minor) to dark red (major)
  */
 export function getMagnitudeColor(magnitude: number | null): string {
   if (magnitude === null) return '#888888';
@@ -115,6 +48,7 @@ export function getMagnitudeColor(magnitude: number | null): string {
 
 /**
  * Get radius for earthquake marker based on magnitude
+ * Scales from 4px (minor) to 25px (major)
  */
 export function getMagnitudeRadius(magnitude: number | null): number {
   if (magnitude === null) return 4;
@@ -168,14 +102,14 @@ export function formatCacheTime(timestamp: number): string {
 }
 
 /**
- * Format depth to readable string
+ * Format depth to readable string with unit
  */
 export function formatDepth(depth: number): string {
   return `${depth.toFixed(1)} km`;
 }
 
 /**
- * Get depth description
+ * Get depth description category
  */
 export function getDepthDescription(depth: number): string {
   if (depth < 70) return 'Shallow';

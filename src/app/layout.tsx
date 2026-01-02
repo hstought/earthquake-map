@@ -1,7 +1,15 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
+
+// Configure Inter font with next/font for optimal loading
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: 'Earthquake Map',
@@ -18,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body suppressHydrationWarning>
+    <html lang="en" className={`dark ${inter.variable}`} suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
         {children}
         <Toaster 
           richColors 

@@ -1,22 +1,13 @@
 import { NextResponse } from 'next/server';
+import type {
+  EarthquakeResponse,
+  MagnitudeFilter,
+  TimePeriodFilter,
+} from '@/types/earthquake';
 
-// TypeScript interfaces for USGS Earthquake GeoJSON API
-interface EarthquakeMetadata {
-  generated: number;
-  url: string;
-  title: string;
-  status: number;
-  api: string;
-  count: number;
-}
-
-interface EarthquakeResponse {
-  type: 'FeatureCollection';
-  metadata: EarthquakeMetadata;
-  features: unknown[];
-  bbox?: [number, number, number, number, number, number];
-}
-
+/**
+ * Internal cache structure for storing USGS API responses
+ */
 interface CachedData {
   data: EarthquakeResponse;
   fetchedAt: number; // Unix timestamp when we fetched from USGS
@@ -89,9 +80,6 @@ function getNextRefreshBoundary(): number {
 
 // Base URL for USGS real-time feeds
 const USGS_FEED_BASE = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary';
-
-type MagnitudeFilter = 'all' | '1.0' | '2.5' | '4.5' | 'significant';
-type TimePeriodFilter = 'hour' | 'day' | 'week' | 'month';
 
 function buildFeedUrl(magnitude: MagnitudeFilter, period: TimePeriodFilter): string {
   const magPart = magnitude === 'all' ? 'all' : magnitude;
