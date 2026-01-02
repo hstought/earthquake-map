@@ -1,41 +1,40 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { CircleMarker, MapContainer, Popup, TileLayer, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import { renderToString } from 'react-dom/server';
 import { toast } from 'sonner';
-
 import {
+  type EarthquakeFeature,
   fetchEarthquakes,
+  formatCacheTime,
   getMagnitudeColor,
   getMagnitudeRadius,
-  formatCacheTime,
   type MagnitudeFilter,
   type TimePeriodFilter,
-  type EarthquakeFeature,
 } from '@/lib/earthquakeService';
-
-import FilterPanel from './FilterPanel';
-import StatsBar from './StatsBar';
-import MagnitudeLegend from './MagnitudeLegend';
-import LoadingOverlay from './LoadingOverlay';
 import EarthquakePopup from './EarthquakePopup';
+import FilterPanel from './FilterPanel';
+import LoadingOverlay from './LoadingOverlay';
+import MagnitudeLegend from './MagnitudeLegend';
+import StatsBar from './StatsBar';
 import ThemeToggle from './ThemeToggle';
-import { renderToString } from 'react-dom/server';
 
 // Constants
 const CARTO_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 const CARTO_LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-const CARTO_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const CARTO_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 // Map bounds - infinite horizontal (use very large values), limited vertical (poles)
 // This allows infinite left/right panning while preventing scrolling past the poles
 const INFINITE_HORIZONTAL_BOUNDS = L.latLngBounds(
   L.latLng(-85, -Infinity), // Southwest corner - infinite west
-  L.latLng(85, Infinity)    // Northeast corner - infinite east
+  L.latLng(85, Infinity) // Northeast corner - infinite east
 );
 
 // Helper function to get wrapped longitudes for infinite horizontal scrolling
@@ -47,11 +46,11 @@ function getWrappedLongitudes(lng: number): number[] {
 // Map configuration component for setting zoom control position
 function MapConfig() {
   const map = useMap();
-  
+
   useEffect(() => {
     map.zoomControl.setPosition('bottomright');
   }, [map]);
-  
+
   return null;
 }
 
@@ -66,10 +65,10 @@ function EarthquakeMarker({ feature, isNew }: EarthquakeMarkerProps) {
   const [showAnimation, setShowAnimation] = useState(isNew);
   const [lng, lat] = feature.geometry.coordinates;
   const magnitude = feature.properties.mag;
-  
+
   const baseRadius = getMagnitudeRadius(magnitude);
   const radius = isHovered ? baseRadius * 1.3 : baseRadius;
-  
+
   // Remove animation class after animation completes
   useEffect(() => {
     if (showAnimation) {
@@ -131,21 +130,22 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
         iconCreateFunction: (cluster) => {
           const count = cluster.getChildCount();
           const childMarkers = cluster.getAllChildMarkers();
-          
+
           // Calculate average magnitude from all child markers
           let totalMagnitude = 0;
           let validCount = 0;
           childMarkers.forEach((marker) => {
-            const data = (marker as L.Marker & { earthquakeData?: EarthquakeMarkerData }).earthquakeData;
+            const data = (marker as L.Marker & { earthquakeData?: EarthquakeMarkerData })
+              .earthquakeData;
             if (data && typeof data.magnitude === 'number') {
               totalMagnitude += data.magnitude;
               validCount++;
             }
           });
-          
+
           const avgMagnitude = validCount > 0 ? totalMagnitude / validCount : 0;
           const clusterColor = getMagnitudeColor(avgMagnitude);
-          
+
           // Determine size based on count
           let size = 40;
           if (count >= 100) {
@@ -153,7 +153,7 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
           } else if (count >= 10) {
             size = 50;
           }
-          
+
           return L.divIcon({
             html: `<div class="cluster-marker" style="
               width: ${size}px;
@@ -189,7 +189,7 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
 
       // Create markers at wrapped longitudes for seamless infinite scrolling
       const wrappedLongitudes = getWrappedLongitudes(lng);
-      
+
       wrappedLongitudes.forEach((wrappedLng) => {
         const icon = L.divIcon({
           className: 'earthquake-marker-icon',
@@ -206,11 +206,13 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
           iconAnchor: [size / 2, size / 2],
         });
 
-        const marker = L.marker([lat, wrappedLng], { icon }) as L.Marker & { earthquakeData?: EarthquakeMarkerData };
-        
+        const marker = L.marker([lat, wrappedLng], { icon }) as L.Marker & {
+          earthquakeData?: EarthquakeMarkerData;
+        };
+
         // Store magnitude data on marker for cluster icon calculation
         marker.earthquakeData = { magnitude };
-        
+
         // Add tooltip
         marker.bindTooltip(`<span class="font-semibold">M ${magnitude.toFixed(1)}</span>`, {
           direction: 'top',
@@ -227,7 +229,7 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
         });
 
         // Add hover effects
-        marker.on('mouseover', function(this: L.Marker) {
+        marker.on('mouseover', function (this: L.Marker) {
           const el = this.getElement();
           if (el) {
             const dot = el.querySelector('.earthquake-dot') as HTMLElement;
@@ -240,7 +242,7 @@ function ClusteredMarkers({ earthquakes }: ClusteredMarkersProps) {
           }
         });
 
-        marker.on('mouseout', function(this: L.Marker) {
+        marker.on('mouseout', function (this: L.Marker) {
           const el = this.getElement();
           if (el) {
             const dot = el.querySelector('.earthquake-dot') as HTMLElement;
@@ -278,7 +280,7 @@ export default function EarthquakeMap() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  
+
   // Track previous earthquake IDs to detect new ones
   const previousIdsRef = useRef<Set<string>>(new Set());
 
@@ -295,39 +297,39 @@ export default function EarthquakeMap() {
   }, [isDarkMode]);
 
   const toggleTheme = useCallback(() => {
-    setIsDarkMode(prev => !prev);
+    setIsDarkMode((prev) => !prev);
   }, []);
 
   const loadEarthquakes = useCallback(async () => {
     setIsLoading(true);
-    
+
     try {
       const data = await fetchEarthquakes(magnitude, period);
-      
+
       // Detect new earthquakes
       const currentIds = new Set(data.features.map((f) => f.id));
       const newIds = new Set<string>();
-      
+
       if (previousIdsRef.current.size > 0) {
         data.features.forEach((feature) => {
           if (!previousIdsRef.current.has(feature.id)) {
             newIds.add(feature.id);
           }
         });
-        
+
         if (newIds.size > 0) {
           toast.success(`${newIds.size} new earthquake${newIds.size > 1 ? 's' : ''} detected!`, {
             duration: 3000,
           });
         }
       }
-      
+
       previousIdsRef.current = currentIds;
       setEarthquakes(data.features);
       setCount(data.features.length);
       // Use cachedAt to show when data was actually fetched from USGS
       setLastUpdated(formatCacheTime(data.cachedAt));
-      
+
       if (isInitialLoad) {
         setIsInitialLoad(false);
       }
@@ -369,7 +371,7 @@ export default function EarthquakeMap() {
           maxZoom={19}
           noWrap={false}
         />
-        
+
         {/* Clustered earthquake markers using native Leaflet */}
         <ClusteredMarkers earthquakes={earthquakes} />
       </MapContainer>
