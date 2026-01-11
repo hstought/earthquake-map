@@ -1,6 +1,6 @@
 # Earthquake Map
 
-A real-time earthquake visualization app built with Next.js and React. Track seismic activity worldwide using USGS data with an interactive map, intelligent clustering, dark/light themes, and advanced filtering.
+A real-time earthquake visualization app built with Next.js and React. Track seismic activity worldwide using USGS data with an interactive map, intelligent clustering, dark/light themes, and filtering.
 
 ## Demo
 https://earthquake-map-alpha.vercel.app/
