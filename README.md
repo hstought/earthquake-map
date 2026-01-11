@@ -10,7 +10,7 @@ https://earthquake-map-alpha.vercel.app/
 - **Interactive Map** - Smart marker clustering with magnitude-based coloring
 - **Live Filtering** - Filter by magnitude and time period with a collapsible menu
 - **Dark/Light Themes** - Toggle between dark and light map styles
-- **Real-Time Updates** - Auto-refresh every 30 minutes with new earthquake detection
+- **Edge Caching** - API responses cached for 10 minutes to reduce external API calls
 - **Responsive Design** - Works seamlessly on desktop and mobile devices
 - **Magnitude Scale** - Visual color gradient from green (minor) to red (major)
 
@@ -19,8 +19,9 @@ https://earthquake-map-alpha.vercel.app/
 - **Next.js 16** - React framework with Turbopack
 - **React 19** - UI library
 - **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
+- **Tailwind CSS 3** - Utility-first styling
 - **Leaflet + React Leaflet** - Interactive mapping
+- **Biome** - Linting and formatting
 - **USGS API** - Real-time earthquake data
 
 ## Getting Started
@@ -61,10 +62,11 @@ npm start
 ## How It Works
 
 1. **Fetch Data** - App retrieves earthquake data from the USGS Earthquake Hazards Program API
-2. **Filter Data** - Users can filter by magnitude level (all, 1.0+, 2.5+, 4.5+, or significant only)
-3. **Filter by Time** - Select data from the past hour, day, week, or month
-4. **Cluster Markers** - Nearby earthquakes are automatically grouped for better performance
-5. **View Details** - Click on markers to see detailed earthquake information including location, depth, and magnitude
+2. **Edge Caching** - API responses are cached at Vercel's edge for 10 minutes to prevent excessive upstream calls
+3. **Filter Data** - Users can filter by magnitude level (all, 1.0+, 2.5+, 4.5+, or significant only)
+4. **Filter by Time** - Select data from the past hour, day, week, or month
+5. **Cluster Markers** - Nearby earthquakes are automatically grouped for better performance
+6. **View Details** - Click on markers to see detailed earthquake information including location, depth, and magnitude
 
 ## Architecture
 
@@ -73,7 +75,7 @@ The project groups code by feature and separates concerns between UI, data acces
 ```
 src/
 ├── app/                    # Next.js App Router pages and API routes
-│   ├── api/               # API endpoints (cached USGS proxy)
+│   ├── api/               # API endpoints (edge-cached USGS proxy)
 │   ├── layout.tsx         # Root layout with metadata
 │   └── page.tsx           # Home page with map
 ├── components/            # React components
@@ -97,13 +99,10 @@ src/
 
 ### Key Technologies
 
-- **Next.js 16** with App Router
+- **Next.js 16** with App Router and built-in fetch caching
 - **React 19** with functional components
 - **TypeScript** with strict mode
-- **Tailwind CSS** for styling
+- **Tailwind CSS 3** for styling
 - **Leaflet** for map visualization
+- **Biome** for linting and formatting
 - **pnpm** for package management
-
-## Development (additional notes)
-
-See `docs/` for project documentation. The repo uses `pnpm` in CI; if you use `npm` locally the commands are the same but dependency resolution may differ.
