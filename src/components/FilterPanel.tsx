@@ -43,12 +43,11 @@ export default function FilterPanel({
 
       {/* Panel Content */}
       <div
-        className={`glass-panel absolute top-2 left-2 sm:top-4 sm:left-4 z-[1000] rounded-xl sm:rounded-2xl p-4 sm:p-6 min-w-[240px] sm:min-w-[300px] transition-all duration-300 ${
+        className={`glass-panel absolute top-14 left-2 sm:top-20 sm:left-4 z-[1000] rounded-xl sm:rounded-2xl p-4 sm:p-6 min-w-[240px] sm:min-w-[300px] transition-all duration-300 ${
           isOpen
             ? 'opacity-100 translate-x-0 pointer-events-auto'
             : 'opacity-0 -translate-x-4 pointer-events-none'
         }`}
-        style={{ marginTop: '44px' }}
       >
         {/* Header */}
         <div
