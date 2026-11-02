@@ -55,7 +55,10 @@ export default function FilterPanel({
           className={`flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5 pb-3 sm:pb-4 border-b ${isDarkMode ? 'border-white/10' : 'border-black/10'}`}
         >
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center group transition-transform hover:scale-110 duration-300">
-            <EpicenterIcon className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" color="#ffffff" />
+            <EpicenterIcon
+              className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse"
+              color="#ffffff"
+            />
           </div>
           <div>
             <h1

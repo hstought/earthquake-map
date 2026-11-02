@@ -10,7 +10,7 @@ export default function EpicenterIcon({
   bg = 'transparent',
 }: EpicenterIconProps) {
   return (
-    <svg viewBox="0 0 100 100" className={className}>
+    <svg viewBox="0 0 100 100" className={className} aria-hidden="true" focusable="false">
       <rect width="100" height="100" rx="20" fill={bg} />
       <circle cx="50" cy="50" r="10" fill={color} />
       <circle cx="50" cy="50" r="26" fill="none" stroke={color} strokeWidth="5" />

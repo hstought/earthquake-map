@@ -25,7 +25,7 @@ function isValidPeriod(value: string): value is TimePeriodFilter {
 
 /**
  * Fetch earthquake data from USGS with Next.js built-in caching
- * 
+ *
  * Uses Next.js fetch caching which works properly on Vercel:
  * - Caches responses at the edge for the specified duration
  * - Automatically revalidates after cache expires
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
 
   try {
     const data = await fetchFromUSGS(magnitudeParam, periodParam);
-    
+
     // The USGS API includes metadata.generated which tells us when the data was generated
     // We use this as the "cachedAt" time since it reflects the data freshness
     const cachedAt = data.metadata?.generated ?? Date.now();
@@ -85,9 +85,6 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error('Failed to fetch from USGS:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch earthquake data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch earthquake data' }, { status: 500 });
   }
 }
